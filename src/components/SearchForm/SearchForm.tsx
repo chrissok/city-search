@@ -8,7 +8,7 @@ import { Button, Fade } from "@mui/material";
 import { DatePicker, LocalizationProvider } from "@mui/x-date-pickers";
 import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
 import dayjs, { Dayjs } from "dayjs";
-import { useNavigate, useSearchParams } from "react-router-dom";
+import { useLocation, useNavigate, useSearchParams } from "react-router-dom";
 import customParseFormat from "dayjs/plugin/customParseFormat";
 
 type Dictionary = { [index: string]: any };
@@ -19,6 +19,7 @@ export default function SearchForm() {
   let [searchParams, setSearchParams] = useSearchParams();
 
   const navigate = useNavigate();
+	const {search} = useLocation()
 
   const dateParam = dayjs(searchParams.get("date"), "L");
 
@@ -126,9 +127,6 @@ export default function SearchForm() {
     }
   };
 
-	console.log(formState);
-	
-
   const add: MouseEventHandler = () => {
     const intermediateCityCounter = intermediateCities.length;
     setIntermediateCities([
@@ -150,14 +148,13 @@ export default function SearchForm() {
     const removedCity = intermediateCitiesCopy.pop();
     setIntermediateCities(intermediateCitiesCopy);
 
-		
     const formStateCopy: any = { ...formState }; //to avoid state mutation
     const formStateValidationCopy: any = { ...formInputValidationState }; //to avoid state mutation
-		
-		formStateCopy.intermediateCities.pop()
+
+    formStateCopy.intermediateCities.pop();
 
     if (removedCity) delete formStateValidationCopy[`${removedCity.id}`];
-		
+
     setFormInputValidationState(formStateValidationCopy);
   };
 
@@ -166,8 +163,7 @@ export default function SearchForm() {
       ...formState,
       intermediateCities: JSON.stringify(formState.intermediateCities),
     });
-
-    // navigate("/login");
+    navigate("/search" + search );
   };
 
   const isFormCompleted = () => {
@@ -205,7 +201,7 @@ export default function SearchForm() {
             label="Intermediate City"
             variant="outlined"
             required
-						value={formState.intermediateCities[index]}
+            value={formState.intermediateCities[index]}
             onChange={(e) => {
               setFormState({
                 ...formState,
