@@ -9,7 +9,7 @@ function AddRemoveButtons({
 }: {
   add: MouseEventHandler;
   remove: MouseEventHandler;
-  state: number[];
+  state: string[];
 }) {
   const stateNotEmpty: boolean = state.length > 0;
 
