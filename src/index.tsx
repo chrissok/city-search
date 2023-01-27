@@ -4,12 +4,18 @@ import { createBrowserRouter, RouterProvider } from "react-router-dom";
 import { theme } from "./theme/theme";
 import Home from "./routes/home/Home";
 import { ThemeProvider } from "@emotion/react";
-import ErrorPage from "./routes/home/error/ErrorPage";
+import ErrorPage from "./routes/error/ErrorPage";
+import SearchResults from "./routes/search-results/SearchResults";
 
 const router = createBrowserRouter([
   {
     path: "/",
     element: <Home />,
+		errorElement: <ErrorPage />,
+  },
+  {
+    path: "/search",
+    element: <SearchResults />,
 		errorElement: <ErrorPage />,
   },
 ]);

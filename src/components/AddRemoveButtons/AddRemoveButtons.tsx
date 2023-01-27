@@ -14,7 +14,7 @@ function AddRemoveButtons({
   const stateNotEmpty: boolean = state.length > 0;
 
   return (
-    <Box>
+    <Box mb={1}>
       <Button
         sx={styles.button}
         variant="contained"

@@ -1,15 +1,26 @@
-import * as React from "react";
 import Box from "@mui/material/Box";
 import TextField from "@mui/material/TextField";
 import { styles } from "./styles";
 import AddRemoveButtons from "../AddRemoveButtons/AddRemoveButtons";
-import { useState, MouseEventHandler } from "react";
-import { Button, Fade } from "@mui/material";
+import _debounce from "lodash/debounce";
+import { useState, MouseEventHandler, useCallback } from "react";
+import {
+  Button,
+  Fade,
+  FormControl,
+  InputLabel,
+  LinearProgress,
+  MenuItem,
+  Select,
+  SelectChangeEvent,
+} from "@mui/material";
 import { DatePicker, LocalizationProvider } from "@mui/x-date-pickers";
 import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
 import dayjs, { Dayjs } from "dayjs";
 import { useLocation, useNavigate, useSearchParams } from "react-router-dom";
 import customParseFormat from "dayjs/plugin/customParseFormat";
+import { serialize } from "../../utils/utils";
+import { getCitiesByName } from "../../api/actions";
 
 type Dictionary = { [index: string]: any };
 
@@ -19,13 +30,11 @@ export default function SearchForm() {
   let [searchParams, setSearchParams] = useSearchParams();
 
   const navigate = useNavigate();
-	const {search} = useLocation()
+  const { search } = useLocation();
 
   const dateParam = dayjs(searchParams.get("date"), "L");
 
-  const [dateValue, setDateValue] = React.useState<Dayjs | null>(
-    dateParam || null
-  );
+  const [dateValue, setDateValue] = useState<Dayjs | null>(dateParam || null);
 
   const cityOriginParam = searchParams.get("cityOrigin");
   const cityDestinationParam = searchParams.get("cityDestination");
@@ -38,9 +47,9 @@ export default function SearchForm() {
     intermediateCitiesParamParsed = JSON.parse(intermediateCitiesParam);
 
   const [formState, setFormState] = useState<Dictionary>({
-    cityOrigin: searchParams.get("cityOrigin") || "",
-    cityDestination: searchParams.get("cityDestination") || "",
-    passenger: searchParams.get("passenger") || "0",
+    cityOrigin: cityOriginParam || "",
+    cityDestination: cityDestinationParam || "",
+    passenger: passengerParam || "0",
     intermediateCities: Object.values(intermediateCitiesParamParsed) || [],
   });
 
@@ -84,8 +93,6 @@ export default function SearchForm() {
     });
     return validationsIntermediateCities;
   };
-
-  console.log(mapIntermediateCitiesParams());
 
   const [formInputValidationState, setFormInputValidationState] =
     useState<Dictionary>(setIntermediateCitiesValidation());
@@ -159,11 +166,21 @@ export default function SearchForm() {
   };
 
   const handleSubmit: MouseEventHandler = () => {
-    setSearchParams({
-      ...formState,
-      intermediateCities: JSON.stringify(formState.intermediateCities),
-    });
-    navigate("/search" + search );
+    // setSearchParams({
+    //   ...formState,
+    //   intermediateCities: JSON.stringify(formState.intermediateCities), // this saves data into this page url
+    // });
+    navigate(
+      `/search?${serialize({
+        ...formState,
+        intermediateCities: JSON.stringify([...formState.intermediateCities]),
+      })}`,
+      {
+        state: {
+          ...formState,
+        },
+      }
+    );
   };
 
   const isFormCompleted = () => {
@@ -176,9 +193,51 @@ export default function SearchForm() {
     return true;
   };
 
+  const [originCityOptions, setOriginCityOptions] = useState<string[]>([]);
+
+  const handleDebounceFn = async (inputValue: string) => {
+		setIsLoadedOriginCity(false)
+    setLoadingOriginCity(true);
+    try {
+      const cities = await getCitiesByName(inputValue);
+      setOriginCityOptions(cities);
+			setIsLoadedOriginCity(true)
+    } catch (error) {
+      console.error(error);
+    }
+    setLoadingOriginCity(false);
+  };
+
+  const handleChangeOriginCity = (event: SelectChangeEvent) => {
+		console.log(event.target.value[0]);
+		
+		setSelectedOriginCity(event.target.value[0])
+    setFormState({ ...formState, cityOriginData: event.target.value });
+  };
+
+  const debounceFn = useCallback(_debounce(handleDebounceFn, 2000), []);
+
+  const [loadingOriginCity, setLoadingOriginCity] = useState(false);
+  const [isLoadedOriginCity, setIsLoadedOriginCity] = useState(false);
+  const [selectedOriginCity, setSelectedOriginCity] = useState('');
+
   return (
     <Box sx={styles.form}>
       <TextField
+        onBlur={onBlurHandler}
+        sx={styles.form__input}
+        label="City of origin"
+        variant="outlined"
+        required
+        value={formState.cityOrigin}
+        onChange={(e) => {
+          debounceFn(e.currentTarget.value);
+          setFormState({ ...formState, cityOrigin: e.target.value });
+        }}
+        name={"cityOrigin"}
+        error={formInputValidationState["cityOrigin"].error}
+      />
+      {/* <TextField
         onBlur={onBlurHandler}
         sx={styles.form__input}
         label="City of origin"
@@ -191,7 +250,24 @@ export default function SearchForm() {
         }}
         name={"cityOrigin"}
         error={formInputValidationState["cityOrigin"].error}
-      />
+      /> */}
+      {loadingOriginCity && <LinearProgress sx={{ mb: 2 }} color="secondary" />}
+      <FormControl sx={{ ml: 1, minWidth: 120 }} size="small">
+        <InputLabel id="demo-simple-select-label">
+          City of Origin Options
+        </InputLabel>
+        <Select
+          value={selectedOriginCity}
+          placeholder="City of Origin Options"
+          label="City of Origin Options"
+          disabled={!isLoadedOriginCity}
+          onChange={handleChangeOriginCity}
+        >
+          {originCityOptions.map((city) => (
+            <MenuItem value={city}>{city[0]}</MenuItem>
+          ))}
+        </Select>
+      </FormControl>
       <AddRemoveButtons add={add} remove={remove} state={intermediateCities} />
       {intermediateCities.map((city, index) => (
         <Fade in={true} timeout={600}>
@@ -250,6 +326,7 @@ export default function SearchForm() {
               sx={styles.form__input}
               name={"date"}
               error={formInputValidationState["date"].error}
+              value={dateValue}
             />
           )}
         />
