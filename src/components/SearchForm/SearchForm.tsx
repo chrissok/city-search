@@ -4,38 +4,45 @@ import { styles } from "./styles";
 import AddRemoveButtons from "../AddRemoveButtons/AddRemoveButtons";
 import _debounce from "lodash/debounce";
 import { useState, MouseEventHandler, useCallback } from "react";
-import {
-  Autocomplete,
-  Button,
-  Fade,
-  FormControl,
-  InputLabel,
-  LinearProgress,
-  MenuItem,
-  Select,
-  SelectChangeEvent,
-} from "@mui/material";
+import { Button } from "@mui/material";
 import { DatePicker, LocalizationProvider } from "@mui/x-date-pickers";
 import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
 import dayjs, { Dayjs } from "dayjs";
 import { useLocation, useNavigate, useSearchParams } from "react-router-dom";
 import customParseFormat from "dayjs/plugin/customParseFormat";
-import { serialize } from "../../utils/utils";
+import { isEmpty, serialize } from "../../utils/utils";
 import { getCitiesByName } from "../../api/actions";
 import ComboBox from "../ComboBox/ComboBox";
 import { Dictionary } from "../../types/types";
 
 dayjs.extend(customParseFormat); // needed to format date from params (string) to dayjs again
 
+const formInputValidation: Dictionary = {
+  cityOrigin: {
+    empty: false,
+    touched: false,
+    error: false,
+    completed: false,
+  },
+  cityDestination: {
+    empty: false,
+    touched: false,
+    error: false,
+    completed: false,
+  },
+  date: { empty: false, touched: false, error: false, completed: false },
+  passenger: { empty: false, touched: false, error: false, completed: false },
+};
+
 export default function SearchForm() {
   let [searchParams, setSearchParams] = useSearchParams();
 
   const navigate = useNavigate();
-  const { search } = useLocation();
 
   const dateParam = dayjs(searchParams.get("date"), "L");
 
   const [dateValue, setDateValue] = useState<Dayjs | null>(dateParam || null);
+  const [originCityOptions, setOriginCityOptions] = useState<string[]>([]);
 
   const cityOriginParam = searchParams.get("cityOrigin");
   const cityDestinationParam = searchParams.get("cityDestination");
@@ -43,7 +50,7 @@ export default function SearchForm() {
   const intermediateCitiesParam = searchParams.get("intermediateCities");
   const citiesDataParam = searchParams.get("citiesData");
 
-  let intermediateCitiesParamParsed = "";
+  let intermediateCitiesParamParsed: any[] = [];
 
   if (intermediateCitiesParam)
     intermediateCitiesParamParsed = JSON.parse(intermediateCitiesParam);
@@ -57,38 +64,14 @@ export default function SearchForm() {
     cityDestination: cityDestinationParam || "",
     citiesData: citiesDataParamParsed || [],
     passenger: passengerParam || "0",
-		date: dateParam.format("L").toString() || null,
-    intermediateCities: Object.values(intermediateCitiesParamParsed) || [],
+    date: dateParam.format("L").toString() || null,
+    intermediateCities: intermediateCitiesParamParsed || [],
   });
-
-  const mapIntermediateCitiesParams = () => {
-    return Object.values(intermediateCitiesParamParsed).map((value, index) => ({
-      id: `cityIntermediate${index}`,
-      value,
-    }));
-  };
-
-  const formInputValidation: Dictionary = {
-    cityOrigin: {
-      empty: false,
-      touched: false,
-      error: false,
-      completed: false,
-    },
-    cityDestination: {
-      empty: false,
-      touched: false,
-      error: false,
-      completed: false,
-    },
-    date: { empty: false, touched: false, error: false, completed: false },
-    passenger: { empty: false, touched: false, error: false, completed: false },
-  };
 
   const setIntermediateCitiesValidation = () => {
     let validationsIntermediateCities = { ...formInputValidation };
 
-    mapIntermediateCitiesParams().forEach((city) => {
+    intermediateCitiesParamParsed.forEach((city) => {
       return (validationsIntermediateCities = {
         ...validationsIntermediateCities,
         [`${city.id}`]: {
@@ -106,16 +89,12 @@ export default function SearchForm() {
     useState<Dictionary>(setIntermediateCitiesValidation());
 
   const [intermediateCities, setIntermediateCities] = useState<any[]>(
-    mapIntermediateCitiesParams || []
+    intermediateCitiesParamParsed || []
   );
 
   const updateTouchElement = (element: string) => {
     if (formInputValidation[element])
       formInputValidation[element].touched = true;
-  };
-
-  const isEmpty = (element: string) => {
-    if (element === "") return true;
   };
 
   const onBlurHandler: any = (event: any, inputName: string) => {
@@ -131,7 +110,7 @@ export default function SearchForm() {
     } else {
       setSearchParams({
         ...formState,
-        intermediateCities: JSON.stringify({ ...formState.intermediateCities }),
+        intermediateCities: JSON.stringify([...formState.intermediateCities]),
         citiesData: JSON.stringify([...formState.citiesData]),
       });
       setFormInputValidationState({
@@ -160,10 +139,12 @@ export default function SearchForm() {
       },
     });
   };
-
   const remove: MouseEventHandler = () => {
     const intermediateCitiesCopy = [...intermediateCities]; //to avoid state mutation
     const removedCity = intermediateCitiesCopy.pop();
+    console.log(removedCity.value);
+
+    const cityDataCopy = [...formState.citiesData]; //to avoid state mutation
     setIntermediateCities(intermediateCitiesCopy);
 
     const formStateCopy: any = { ...formState }; //to avoid state mutation
@@ -202,8 +183,6 @@ export default function SearchForm() {
     }
     return true;
   };
-
-  const [originCityOptions, setOriginCityOptions] = useState<string[]>([]);
 
   const handleDebounceFn = async (
     inputValue: string,
