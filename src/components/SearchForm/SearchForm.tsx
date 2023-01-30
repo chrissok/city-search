@@ -5,6 +5,7 @@ import AddRemoveButtons from "../AddRemoveButtons/AddRemoveButtons";
 import _debounce from "lodash/debounce";
 import { useState, MouseEventHandler, useCallback } from "react";
 import {
+  Autocomplete,
   Button,
   Fade,
   FormControl,
@@ -21,8 +22,8 @@ import { useLocation, useNavigate, useSearchParams } from "react-router-dom";
 import customParseFormat from "dayjs/plugin/customParseFormat";
 import { serialize } from "../../utils/utils";
 import { getCitiesByName } from "../../api/actions";
-
-type Dictionary = { [index: string]: any };
+import ComboBox from "../ComboBox/ComboBox";
+import { Dictionary } from "../../types/types";
 
 dayjs.extend(customParseFormat); // needed to format date from params (string) to dayjs again
 
@@ -110,14 +111,12 @@ export default function SearchForm() {
     if (element === "") return true;
   };
 
-  const onBlurHandler: React.FocusEventHandler = (
-    event: React.FocusEvent<HTMLInputElement>
-  ) => {
-    if (isEmpty(event.currentTarget?.value)) {
+  const onBlurHandler: any = (event: any, inputName: string) => {
+    if (isEmpty(event.target.value)) {
       setFormInputValidationState({
         ...formInputValidationState,
-        [event.target.name]: {
-          ...[event.target.name],
+        [inputName]: {
+          ...formInputValidationState[inputName],
           error: true,
           completed: false,
         },
@@ -125,12 +124,13 @@ export default function SearchForm() {
     } else {
       setFormInputValidationState({
         ...formInputValidationState,
-        [event.target.name]: {
-          ...[event.target.name],
+        [inputName]: {
+          ...formInputValidationState[inputName],
           error: false,
           completed: true,
         },
       });
+      console.log(formInputValidationState);
     }
   };
 
@@ -166,14 +166,10 @@ export default function SearchForm() {
   };
 
   const handleSubmit: MouseEventHandler = () => {
-    // setSearchParams({
-    //   ...formState,
-    //   intermediateCities: JSON.stringify(formState.intermediateCities), // this saves data into this page url
-    // });
     navigate(
       `/search?${serialize({
         ...formState,
-        intermediateCities: JSON.stringify([...formState.intermediateCities]),
+        intermediateCities: JSON.stringify({ ...formState.intermediateCities }),
       })}`,
       {
         state: {
@@ -184,6 +180,8 @@ export default function SearchForm() {
   };
 
   const isFormCompleted = () => {
+    console.log(formInputValidationState);
+
     if (cityOriginParam && dateParam && cityDestinationParam && passengerParam)
       return true;
 
@@ -195,23 +193,26 @@ export default function SearchForm() {
 
   const [originCityOptions, setOriginCityOptions] = useState<string[]>([]);
 
-  const handleDebounceFn = async (inputValue: string) => {
-		setIsLoadedOriginCity(false)
-    setLoadingOriginCity(true);
+  const handleDebounceFn = async (
+    inputValue: string,
+    setIsLoading: Function
+  ) => {
+    setIsLoadedOriginCity(false);
+    setIsLoading(true);
     try {
       const cities = await getCitiesByName(inputValue);
       setOriginCityOptions(cities);
-			setIsLoadedOriginCity(true)
+      setIsLoadedOriginCity(true);
     } catch (error) {
       console.error(error);
     }
-    setLoadingOriginCity(false);
+    setIsLoading(false);
   };
 
   const handleChangeOriginCity = (event: SelectChangeEvent) => {
-		console.log(event.target.value[0]);
-		
-		setSelectedOriginCity(event.target.value[0])
+    console.log(event.target.value[0]);
+
+    setSelectedOriginCity(event.target.value[0]);
     setFormState({ ...formState, cityOriginData: event.target.value });
   };
 
@@ -219,59 +220,41 @@ export default function SearchForm() {
 
   const [loadingOriginCity, setLoadingOriginCity] = useState(false);
   const [isLoadedOriginCity, setIsLoadedOriginCity] = useState(false);
-  const [selectedOriginCity, setSelectedOriginCity] = useState('');
+  const [selectedOriginCity, setSelectedOriginCity] = useState("");
 
   return (
     <Box sx={styles.form}>
-      <TextField
-        onBlur={onBlurHandler}
-        sx={styles.form__input}
-        label="City of origin"
-        variant="outlined"
-        required
+      <ComboBox
+        inputLabel="City of Origin"
+        inputName={"cityOrigin"}
+        debounceFn={debounceFn}
+        onBlurHandler={onBlurHandler}
+        updateTouchElement={updateTouchElement}
         value={formState.cityOrigin}
-        onChange={(e) => {
-          debounceFn(e.currentTarget.value);
-          setFormState({ ...formState, cityOrigin: e.target.value });
-        }}
-        name={"cityOrigin"}
-        error={formInputValidationState["cityOrigin"].error}
+        options={originCityOptions}
+        setFormState={setFormState}
+        formState={formState}
+        formInputValidation={formInputValidationState}
+        sx={styles.form__input}
       />
-      {/* <TextField
-        onBlur={onBlurHandler}
-        sx={styles.form__input}
-        label="City of origin"
-        variant="outlined"
-        required
-        value={formState.cityOrigin}
-        onChange={(e) => {
-          setFormState({ ...formState, cityOrigin: e.target.value });
-          updateTouchElement("cityOrigin");
-        }}
-        name={"cityOrigin"}
-        error={formInputValidationState["cityOrigin"].error}
-      /> */}
-      {loadingOriginCity && <LinearProgress sx={{ mb: 2 }} color="secondary" />}
-      <FormControl sx={{ ml: 1, minWidth: 120 }} size="small">
-        <InputLabel id="demo-simple-select-label">
-          City of Origin Options
-        </InputLabel>
-        <Select
-          value={selectedOriginCity}
-          placeholder="City of Origin Options"
-          label="City of Origin Options"
-          disabled={!isLoadedOriginCity}
-          onChange={handleChangeOriginCity}
-        >
-          {originCityOptions.map((city) => (
-            <MenuItem value={city}>{city[0]}</MenuItem>
-          ))}
-        </Select>
-      </FormControl>
       <AddRemoveButtons add={add} remove={remove} state={intermediateCities} />
       {intermediateCities.map((city, index) => (
-        <Fade in={true} timeout={600}>
-          <TextField
+        <ComboBox
+          inputLabel="Intermediate City"
+          isIterationChild={true}
+          inputName={city.id}
+          debounceFn={debounceFn}
+          onBlurHandler={onBlurHandler}
+          updateTouchElement={updateTouchElement}
+          value={formState.intermediateCities[index]}
+          options={originCityOptions}
+          setFormState={setFormState}
+          formState={formState}
+          formInputValidation={formInputValidationState}
+          sx={styles.form__input}
+        />
+      ))}
+      {/* <TextField
             sx={styles.form__input}
             onBlur={onBlurHandler}
             label="Intermediate City"
@@ -290,10 +273,21 @@ export default function SearchForm() {
             }}
             name={city.id}
             error={formInputValidationState[city.id].error}
-          />
-        </Fade>
-      ))}
-      <TextField
+          /> */}
+      <ComboBox
+        inputLabel="City of destination"
+        inputName={"cityDestination"}
+        debounceFn={debounceFn}
+        onBlurHandler={onBlurHandler}
+        updateTouchElement={updateTouchElement}
+        value={formState.cityDestination}
+        options={originCityOptions}
+        setFormState={setFormState}
+        formState={formState}
+        formInputValidation={formInputValidationState}
+        sx={styles.form__input}
+      />
+      {/* <TextField
         sx={styles.form__input}
         label="City of destination"
         variant="outlined"
@@ -306,7 +300,7 @@ export default function SearchForm() {
         name={"cityDestination"}
         error={formInputValidationState["cityDestination"].error}
         onBlur={onBlurHandler}
-      />
+      /> */}
       <LocalizationProvider dateAdapter={AdapterDayjs}>
         <DatePicker
           label="Pick a date"
@@ -322,7 +316,7 @@ export default function SearchForm() {
           renderInput={(params) => (
             <TextField
               {...params}
-              onBlur={onBlurHandler}
+              onBlur={(event) => onBlurHandler(event, "date")}
               sx={styles.form__input}
               name={"date"}
               error={formInputValidationState["date"].error}
@@ -342,7 +336,7 @@ export default function SearchForm() {
         }}
         name={"passenger"}
         error={formInputValidationState["passenger"].error}
-        onBlur={onBlurHandler}
+        onBlur={(event) => onBlurHandler(event, "passenger")}
       />
       <Button
         variant="contained"

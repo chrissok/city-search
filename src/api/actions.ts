@@ -3,6 +3,13 @@ import { cities } from "./mock-cities";
 
 export const getCitiesByName = (keyword: string): Promise<any[]> => {
   const filteredCities = cities.filter((city) => city[0] === keyword);
+
+//  const mapCities = filteredCities.map((city) => ({
+//     city: city[0],
+//     latitude: city[1],
+//     longitude: city[2],
+//   }));
+
   return new Promise((resolve, reject) => {
     setTimeout(() => {
       if (keyword === "fail" || filteredCities.length === 0) {
