@@ -41,16 +41,23 @@ export default function SearchForm() {
   const cityDestinationParam = searchParams.get("cityDestination");
   const passengerParam = searchParams.get("passenger");
   const intermediateCitiesParam = searchParams.get("intermediateCities");
+  const citiesDataParam = searchParams.get("citiesData");
 
   let intermediateCitiesParamParsed = "";
 
   if (intermediateCitiesParam)
     intermediateCitiesParamParsed = JSON.parse(intermediateCitiesParam);
 
+  let citiesDataParamParsed = "";
+
+  if (citiesDataParam) citiesDataParamParsed = JSON.parse(citiesDataParam);
+
   const [formState, setFormState] = useState<Dictionary>({
     cityOrigin: cityOriginParam || "",
     cityDestination: cityDestinationParam || "",
+    citiesData: citiesDataParamParsed || [],
     passenger: passengerParam || "0",
+		date: dateParam.format("L").toString() || null,
     intermediateCities: Object.values(intermediateCitiesParamParsed) || [],
   });
 
@@ -122,6 +129,11 @@ export default function SearchForm() {
         },
       });
     } else {
+      setSearchParams({
+        ...formState,
+        intermediateCities: JSON.stringify({ ...formState.intermediateCities }),
+        citiesData: JSON.stringify([...formState.citiesData]),
+      });
       setFormInputValidationState({
         ...formInputValidationState,
         [inputName]: {
@@ -130,7 +142,6 @@ export default function SearchForm() {
           completed: true,
         },
       });
-      console.log(formInputValidationState);
     }
   };
 
@@ -166,10 +177,13 @@ export default function SearchForm() {
   };
 
   const handleSubmit: MouseEventHandler = () => {
+    console.log(formState);
+
     navigate(
       `/search?${serialize({
         ...formState,
         intermediateCities: JSON.stringify({ ...formState.intermediateCities }),
+        citiesData: JSON.stringify([...formState.citiesData]),
       })}`,
       {
         state: {
@@ -180,8 +194,6 @@ export default function SearchForm() {
   };
 
   const isFormCompleted = () => {
-    console.log(formInputValidationState);
-
     if (cityOriginParam && dateParam && cityDestinationParam && passengerParam)
       return true;
 
@@ -197,30 +209,17 @@ export default function SearchForm() {
     inputValue: string,
     setIsLoading: Function
   ) => {
-    setIsLoadedOriginCity(false);
     setIsLoading(true);
     try {
       const cities = await getCitiesByName(inputValue);
       setOriginCityOptions(cities);
-      setIsLoadedOriginCity(true);
     } catch (error) {
       console.error(error);
     }
     setIsLoading(false);
   };
 
-  const handleChangeOriginCity = (event: SelectChangeEvent) => {
-    console.log(event.target.value[0]);
-
-    setSelectedOriginCity(event.target.value[0]);
-    setFormState({ ...formState, cityOriginData: event.target.value });
-  };
-
   const debounceFn = useCallback(_debounce(handleDebounceFn, 2000), []);
-
-  const [loadingOriginCity, setLoadingOriginCity] = useState(false);
-  const [isLoadedOriginCity, setIsLoadedOriginCity] = useState(false);
-  const [selectedOriginCity, setSelectedOriginCity] = useState("");
 
   return (
     <Box sx={styles.form}>
@@ -254,26 +253,6 @@ export default function SearchForm() {
           sx={styles.form__input}
         />
       ))}
-      {/* <TextField
-            sx={styles.form__input}
-            onBlur={onBlurHandler}
-            label="Intermediate City"
-            variant="outlined"
-            required
-            value={formState.intermediateCities[index]}
-            onChange={(e) => {
-              setFormState({
-                ...formState,
-                intermediateCities: {
-                  ...formState.intermediateCities,
-                  [city.id]: e.target.value,
-                },
-              });
-              updateTouchElement(city.id);
-            }}
-            name={city.id}
-            error={formInputValidationState[city.id].error}
-          /> */}
       <ComboBox
         inputLabel="City of destination"
         inputName={"cityDestination"}
@@ -287,20 +266,6 @@ export default function SearchForm() {
         formInputValidation={formInputValidationState}
         sx={styles.form__input}
       />
-      {/* <TextField
-        sx={styles.form__input}
-        label="City of destination"
-        variant="outlined"
-        value={formState.cityDestination}
-        required
-        onChange={(e) => {
-          setFormState({ ...formState, cityDestination: e.target.value });
-          updateTouchElement("cityDestination");
-        }}
-        name={"cityDestination"}
-        error={formInputValidationState["cityDestination"].error}
-        onBlur={onBlurHandler}
-      /> */}
       <LocalizationProvider dateAdapter={AdapterDayjs}>
         <DatePicker
           label="Pick a date"

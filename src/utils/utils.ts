@@ -10,3 +10,7 @@ export const serialize = (object: any) => {
     }
   return str.join("&");
 };
+
+export const sumArray = (arr: any[]) => {
+  return arr.reduce((acc, element) => acc + element);
+};

@@ -14,7 +14,7 @@ function ComboBox({
   inputLabel,
   formInputValidation,
   isIterationChild = false,
-	sx,
+  sx,
   ...props
 }: {
   onBlurHandler: any;
@@ -28,15 +28,15 @@ function ComboBox({
   inputLabel: string;
   formInputValidation: Dictionary;
   isIterationChild?: boolean;
-	sx?: any
+  sx?: any;
 }) {
   const onChangeIteration = (newValue: any[]) => {
     setFormState({
       ...formState,
+      citiesData: [...formState.citiesData, newValue],
       intermediateCities: {
         ...formState.intermediateCities,
         [inputName]: newValue[0],
-        [inputName + "Data"]: newValue,
       },
     });
   };
@@ -49,7 +49,7 @@ function ComboBox({
         <Autocomplete
           {...props}
           disablePortal
-					onBlur={(event) => onBlurHandler(event, inputName)}
+          onBlur={(event) => onBlurHandler(event, inputName)}
           options={options}
           filterOptions={(x) => x}
           value={value}
@@ -68,7 +68,7 @@ function ComboBox({
               setFormState({
                 ...formState,
                 [inputName]: newValue[0],
-                [inputName + "Data"]: newValue,
+                citiesData: [...formState.citiesData, newValue],
               });
             }
           }}
@@ -81,7 +81,7 @@ function ComboBox({
             <TextField
               {...params}
               onBlur={(event) => onBlurHandler(event, inputName)}
-							sx={sx}
+              sx={sx}
               InputProps={{
                 ...params.InputProps,
                 endAdornment: (

@@ -1,9 +1,16 @@
-import { TextField } from "@mui/material";
+import {
+  Card,
+  CardContent,
+  CircularProgress,
+  TextField,
+  Typography,
+} from "@mui/material";
 import { Box } from "@mui/system";
 import { useLocation, useParams, useSearchParams } from "react-router-dom";
 import { styles } from "./styles";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { calculateDistance } from "../../api/actions";
+import { sumArray } from "../../utils/utils";
 
 function SearchResults() {
   // const { ...all } = useLocation();
@@ -16,54 +23,104 @@ function SearchResults() {
   const passenger = searchParams.get("passenger");
   const intermediateCities = searchParams.get("intermediateCities");
   const date = searchParams.get("date");
+  const citiesData = searchParams.get("citiesData");
 
-  const cities = [
-    ["Paris", 48.856614, 2.352222],
+  const citiesDataParsed = citiesData ? JSON.parse(citiesData) : citiesData;
+  const intermediateCitiesParsed = intermediateCities
+    ? JSON.parse(intermediateCities)
+    : intermediateCities;
 
-    ["hola", 43.296482, 5.36978],
+  console.log(intermediateCitiesParsed);
 
-    ["Lyon", 45.764043, 4.835659],
+  const [cityDistances, setCityDistances] = useState([]);
+  const [totalDistance, setTotalDistance] = useState(0);
+  const [loading, setLoading] = useState(false);
 
-    ["Toulouse", 43.604652, 1.444209],
-  ];
-
-  calculateDistance(cities)
-    .then((e) => console.log(e))
-    .catch((err) => console.log(err));
+  useEffect(() => {
+    setLoading(true);
+    calculateDistance(citiesDataParsed)
+      .then((data: any) => {
+        setCityDistances(data);
+        setTotalDistance(data[data.length - 1]);
+        setLoading(false);
+      })
+      .catch((err) => {
+        console.error(err);
+        setLoading(false);
+      });
+  }, []);
 
   return (
-    <Box sx={styles.container}>
-      <TextField
-        sx={styles.container__input}
-        value={cityOrigin}
-        disabled
-        label={"City of Origin"}
-      />
-      <TextField
-        value={cityDestination}
-        disabled
-        label={"City of Origin"}
-        sx={styles.container__input}
-      />
-      <TextField
-        value={intermediateCities}
-        disabled
-        label={"Intermediate Cities"}
-        sx={styles.container__input}
-      />
-      <TextField
-        value={date}
-        disabled
-        label={"Date"}
-        sx={styles.container__input}
-      />
-      <TextField
-        value={passenger}
-        disabled
-        label={"City of Origin"}
-        sx={styles.container__input}
-      />
-    </Box>
+    <>
+      <Typography
+        variant={"h1"}
+        color={"#9765C3"}
+        textAlign="center"
+        fontWeight="bold"
+      >
+        City Search
+      </Typography>
+      <Typography variant={"h4"} color={"#8b789c"} textAlign="center" mt={2}>
+        Search Results
+      </Typography>
+      <Box sx={styles.container}>
+        <TextField
+          sx={styles.container__input}
+          value={cityOrigin}
+          disabled
+          label={"City of Origin"}
+        />
+        <TextField
+          value={cityDestination}
+          disabled
+          label={"City of Origin"}
+          sx={styles.container__input}
+        />
+        {Object.values(intermediateCitiesParsed).map((city) => (
+          <TextField
+            value={city}
+            disabled
+            label={"Intermediate Cities"}
+            sx={styles.container__input}
+          />
+        ))}
+        <TextField
+          value={date}
+          disabled
+          label={"Date"}
+          sx={styles.container__input}
+        />
+        <TextField
+          value={passenger}
+          disabled
+          label={"City of Origin"}
+          sx={styles.container__input}
+        />
+      </Box>
+
+      <Card sx={styles["distances-container"]}>
+        <CardContent>
+          {loading && (
+            <>
+              <Typography variant="h6">Calculating distances...</Typography>
+              <CircularProgress sx={{ margin: "10px" }} color="primary" />
+            </>
+          )}
+          {cityDistances.map(({ route, distance }) => (
+            <>
+              <Typography variant="h6">{route}</Typography>
+              <Typography variant="body1" mb={2}>{distance}</Typography>
+            </>
+          ))}
+          {totalDistance !== 0 && (
+            <>
+              <Typography variant="h6">Total Distance</Typography>
+              <Typography>{totalDistance} Km</Typography>
+            </>
+          )}
+        </CardContent>
+      </Card>
+    </>
   );
 }
 
