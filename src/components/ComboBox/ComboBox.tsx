@@ -1,5 +1,5 @@
 import { Autocomplete, CircularProgress, Fade, TextField } from "@mui/material";
-import React, { FocusEventHandler, useState } from "react";
+import React, { useState } from "react";
 import { Dictionary } from "../../types/types";
 
 function ComboBox({
@@ -34,10 +34,10 @@ function ComboBox({
     setFormState({
       ...formState,
       citiesData: [...formState.citiesData, newValue],
-      intermediateCities: {
+      intermediateCities: [
         ...formState.intermediateCities,
-        [inputName]: newValue[0],
-      },
+        { id: inputName, value: newValue[0] },
+      ],
     });
   };
 
@@ -56,7 +56,7 @@ function ComboBox({
           autoComplete
           noOptionsText="No Cities Found"
           getOptionLabel={(option) =>
-            typeof option === "string" ? option : option[0]
+            typeof option === "string" ? option : option.value
           }
           includeInputInList
           isOptionEqualToValue={(option, value) => option[0] === value[0]}

@@ -14,3 +14,7 @@ export const serialize = (object: any) => {
 export const sumArray = (arr: any[]) => {
   return arr.reduce((acc, element) => acc + element);
 };
+
+export const isEmpty = (element: string) => {
+	if (element === "") return true;
+};
