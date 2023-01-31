@@ -7,12 +7,6 @@ export const getCitiesByName = (keyword: string): Promise<any[]> => {
     city[0].includes(keyword)
   );
 
-  //  const mapCities = filteredCities.map((city) => ({
-  //     city: city[0],
-  //     latitude: city[1],
-  //     longitude: city[2],
-  //   }));
-
   return new Promise((resolve, reject) => {
     setTimeout(() => {
       if (keyword === "fail" || filteredCities.length === 0) {

@@ -3,7 +3,7 @@ import TextField from "@mui/material/TextField";
 import { styles } from "./styles";
 import AddRemoveButtons from "../AddRemoveButtons/AddRemoveButtons";
 import _debounce from "lodash/debounce";
-import { useState, MouseEventHandler, useCallback } from "react";
+import { useState, MouseEventHandler } from "react";
 import { Button } from "@mui/material";
 import { DatePicker, LocalizationProvider } from "@mui/x-date-pickers";
 import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
@@ -63,7 +63,7 @@ export default function SearchForm() {
     cityOrigin: cityOriginParam || "",
     cityDestination: cityDestinationParam || "",
     citiesData: citiesDataParamParsed || {},
-    passenger: passengerParam || "0",
+    passenger: passengerParam || "",
     date: dateParam.format("L").toString() || null,
     intermediateCities: intermediateCitiesParamParsed || [],
   });
@@ -139,13 +139,14 @@ export default function SearchForm() {
       },
     });
   };
+
   const remove: MouseEventHandler = () => {
     const intermediateCitiesCopy = [...intermediateCities]; //to avoid state mutation
     const removedCity = intermediateCitiesCopy.pop();
 
     const cityDataCopy = { ...formState.citiesData }; //to avoid state mutation
 
-    const filteredCityData = Object.values(cityDataCopy).filter((city :any) => {
+    const filteredCityData = Object.values(cityDataCopy).filter((city: any) => {
       return city.id !== removedCity.id;
     });
 
@@ -177,44 +178,29 @@ export default function SearchForm() {
       }
     );
   };
-  console.log(formState);
 
   const isFormCompleted = () => {
-    if (cityOriginParam && dateParam && cityDestinationParam && passengerParam)
-      return true;
-
-    for (const property in formInputValidationState) {
-      if (!formInputValidationState[property].completed) return false;
+    // if (cityOriginParam && dateParam && cityDestinationParam && passengerParam)
+    //   return true;
+    for (const property in formState) {
+      if (property === "intermediateCities") {
+        if (formState[property].length < intermediateCities.length) return false;
+      }
+      if (formState[property] === "") return false;
     }
     return true;
   };
 
-  const handleDebounceFn = async (
-    inputValue: string,
-    setIsLoading: Function
-  ) => {
-    setIsLoading(true);
-    try {
-      const cities = await getCitiesByName(inputValue);
-      setOriginCityOptions(cities);
-    } catch (error) {
-      console.error(error);
-    }
-    setIsLoading(false);
-  };
-
-  const debounceFn = useCallback(_debounce(handleDebounceFn, 2000), []);
+  console.log(formState);
 
   return (
     <Box sx={styles.form}>
       <ComboBox
         inputLabel="City of Origin"
         inputName={"cityOrigin"}
-        debounceFn={debounceFn}
         onBlurHandler={onBlurHandler}
         updateTouchElement={updateTouchElement}
         value={formState.cityOrigin}
-        options={originCityOptions}
         setFormState={setFormState}
         formState={formState}
         formInputValidation={formInputValidationState}
@@ -226,11 +212,9 @@ export default function SearchForm() {
           inputLabel="Intermediate City"
           isIterationChild={true}
           inputName={city.id}
-          debounceFn={debounceFn}
           onBlurHandler={onBlurHandler}
           updateTouchElement={updateTouchElement}
           value={formState.intermediateCities[index]?.value}
-          options={originCityOptions}
           setFormState={setFormState}
           formState={formState}
           formInputValidation={formInputValidationState}
@@ -240,11 +224,9 @@ export default function SearchForm() {
       <ComboBox
         inputLabel="City of destination"
         inputName={"cityDestination"}
-        debounceFn={debounceFn}
         onBlurHandler={onBlurHandler}
         updateTouchElement={updateTouchElement}
         value={formState.cityDestination}
-        options={originCityOptions}
         setFormState={setFormState}
         formState={formState}
         formInputValidation={formInputValidationState}

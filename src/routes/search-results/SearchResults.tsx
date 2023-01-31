@@ -35,7 +35,7 @@ function SearchResults() {
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    const cityDaTaToArray =  Object.values(citiesDataParsed)
+    const cityDaTaToArray = Object.values(citiesDataParsed);
 
     setLoading(true);
     calculateDistance(cityDaTaToArray)
@@ -76,9 +76,9 @@ function SearchResults() {
           label={"City of Origin"}
           sx={styles.container__input}
         />
-        {Object.values(intermediateCitiesParsed).map((city) => (
+        {Object.values(intermediateCitiesParsed).map((city: any) => (
           <TextField
-            value={city}
+            value={city.value}
             disabled
             label={"Intermediate Cities"}
             sx={styles.container__input}

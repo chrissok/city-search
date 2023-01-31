@@ -1,15 +1,15 @@
 import { Autocomplete, CircularProgress, Fade, TextField } from "@mui/material";
-import React, { useEffect, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import { Dictionary } from "../../types/types";
+import _debounce from "lodash/debounce";
+import { getCitiesByName } from "../../api/actions";
 
 function ComboBox({
   onBlurHandler,
-  options,
   value,
   updateTouchElement,
   setFormState,
   formState,
-  debounceFn,
   inputName,
   inputLabel,
   formInputValidation,
@@ -18,46 +18,54 @@ function ComboBox({
   ...props
 }: {
   onBlurHandler: any;
-  options: any[];
   value: string;
   updateTouchElement: Function;
   setFormState: Function;
   formState: any;
-  debounceFn: Function;
   inputName: string;
   inputLabel: string;
   formInputValidation: Dictionary;
   isIterationChild?: boolean;
   sx?: any;
 }) {
+  const [options, setOptions] = useState<string[]>([]);
+
+  const [loading, setIsloading] = useState(false);
+
+  const handleDebounceFn = async (
+    inputValue: string,
+    setIsLoading: Function
+  ) => {
+    setIsLoading(true);
+    try {
+      const cities = await getCitiesByName(inputValue);
+      setOptions(cities);
+    } catch (error) {
+      console.error(error);
+    }
+    setIsLoading(false);
+  };
+
+  const debounceFn = useCallback(_debounce(handleDebounceFn, 2000), []);
+
   const onChangeIteration = (newValue: any[]) => {
     setFormState({
       ...formState,
       citiesData: {
         ...formState.citiesData,
-          [inputName]: {
-            id: inputName,
-            name: newValue[0],
-            latitude: newValue[1],
-            longitude: newValue[2],
-          },
-			},
+        [inputName]: {
+          id: inputName,
+          name: newValue ? newValue[0] : "",
+          latitude: newValue ? newValue[1] : "",
+          longitude: newValue ? newValue[2] : "",
+        },
+      },
       intermediateCities: [
         ...formState.intermediateCities,
-        { id: inputName, value: newValue[0] },
+        { id: inputName, value: newValue ? newValue[0] : "" },
       ],
     });
   };
-
-  const setOptionLabel = (option: any) => {
-    if (isIterationChild) {
-      return typeof option === "string" ? option : option[0];
-    } else {
-      return typeof option === "string" ? option : option[0];
-    }
-  };
-
-  const [loading, setIsloading] = useState(false);
 
   return (
     <>
@@ -71,7 +79,9 @@ function ComboBox({
           value={value}
           autoComplete
           noOptionsText="No Cities Found"
-          getOptionLabel={(option) => setOptionLabel(option)}
+          getOptionLabel={(option) =>
+            typeof option === "string" ? option : option[0]
+          }
           includeInputInList
           isOptionEqualToValue={(option, value) => option[0] === value[0]}
           filterSelectedOptions
@@ -81,14 +91,14 @@ function ComboBox({
             } else {
               setFormState({
                 ...formState,
-                [inputName]: newValue[0],
+                [inputName]: newValue ? newValue[0] : "",
                 citiesData: {
                   ...formState.citiesData,
                   [inputName]: {
                     id: inputName,
-                    name: newValue[0],
-                    latitude: newValue[1],
-                    longitude: newValue[2],
+                    name: newValue ? newValue[0] : "",
+                    latitude: newValue ? newValue[1] : "",
+                    longitude: newValue ? newValue[2] : "",
                   },
                 },
               });
