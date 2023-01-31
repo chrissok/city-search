@@ -46,7 +46,7 @@ function ComboBox({
     setIsLoading(false);
   };
 
-  const debounceFn = useCallback(_debounce(handleDebounceFn, 2000), []);
+  const debounceFn = useCallback(_debounce(handleDebounceFn, 1000), []);
 
   const onChangeIteration = (newValue: any[]) => {
     setFormState({

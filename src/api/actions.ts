@@ -3,9 +3,7 @@ import { Dictionary } from "../types/types";
 import { cities } from "./mock-cities";
 
 export const getCitiesByName = (keyword: string): Promise<any[]> => {
-  const filteredCities = cities.filter((city: any) =>
-    city[0].includes(keyword)
-  );
+  const filteredCities = cities.filter((city: any) => city[0] === keyword);
 
   return new Promise((resolve, reject) => {
     setTimeout(() => {
@@ -14,7 +12,7 @@ export const getCitiesByName = (keyword: string): Promise<any[]> => {
       } else {
         resolve(filteredCities);
       }
-    }, 2000);
+    }, 1000);
   });
 };
 

@@ -85,6 +85,12 @@ function SearchResults() {
           />
         ))}
         <TextField
+          value={cityDestination}
+          disabled
+          label={"City of Destination"}
+          sx={styles.container__input}
+        />
+        <TextField
           value={date}
           disabled
           label={"Date"}
@@ -93,7 +99,7 @@ function SearchResults() {
         <TextField
           value={passenger}
           disabled
-          label={"City of Origin"}
+          label={"Passengers"}
           sx={styles.container__input}
         />
       </Box>
