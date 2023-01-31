@@ -62,7 +62,7 @@ export default function SearchForm() {
   const [formState, setFormState] = useState<Dictionary>({
     cityOrigin: cityOriginParam || "",
     cityDestination: cityDestinationParam || "",
-    citiesData: citiesDataParamParsed || [],
+    citiesData: citiesDataParamParsed || {},
     passenger: passengerParam || "0",
     date: dateParam.format("L").toString() || null,
     intermediateCities: intermediateCitiesParamParsed || [],
@@ -111,7 +111,7 @@ export default function SearchForm() {
       setSearchParams({
         ...formState,
         intermediateCities: JSON.stringify([...formState.intermediateCities]),
-        citiesData: JSON.stringify([...formState.citiesData]),
+        citiesData: JSON.stringify({ ...formState.citiesData }),
       });
       setFormInputValidationState({
         ...formInputValidationState,
@@ -142,10 +142,16 @@ export default function SearchForm() {
   const remove: MouseEventHandler = () => {
     const intermediateCitiesCopy = [...intermediateCities]; //to avoid state mutation
     const removedCity = intermediateCitiesCopy.pop();
-    console.log(removedCity.value);
 
-    const cityDataCopy = [...formState.citiesData]; //to avoid state mutation
+    const cityDataCopy = { ...formState.citiesData }; //to avoid state mutation
+
+    const filteredCityData = Object.values(cityDataCopy).filter((city :any) => {
+      return city.id !== removedCity.id;
+    });
+
     setIntermediateCities(intermediateCitiesCopy);
+
+    setFormState({ ...formState, citiesData: filteredCityData });
 
     const formStateCopy: any = { ...formState }; //to avoid state mutation
     const formStateValidationCopy: any = { ...formInputValidationState }; //to avoid state mutation
@@ -158,13 +164,11 @@ export default function SearchForm() {
   };
 
   const handleSubmit: MouseEventHandler = () => {
-    console.log(formState);
-
     navigate(
       `/search?${serialize({
         ...formState,
         intermediateCities: JSON.stringify({ ...formState.intermediateCities }),
-        citiesData: JSON.stringify([...formState.citiesData]),
+        citiesData: JSON.stringify({ ...formState.citiesData }),
       })}`,
       {
         state: {
@@ -173,6 +177,7 @@ export default function SearchForm() {
       }
     );
   };
+  console.log(formState);
 
   const isFormCompleted = () => {
     if (cityOriginParam && dateParam && cityDestinationParam && passengerParam)
@@ -224,7 +229,7 @@ export default function SearchForm() {
           debounceFn={debounceFn}
           onBlurHandler={onBlurHandler}
           updateTouchElement={updateTouchElement}
-          value={formState.intermediateCities[index]}
+          value={formState.intermediateCities[index]?.value}
           options={originCityOptions}
           setFormState={setFormState}
           formState={formState}

@@ -1,5 +1,5 @@
 import { Autocomplete, CircularProgress, Fade, TextField } from "@mui/material";
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Dictionary } from "../../types/types";
 
 function ComboBox({
@@ -33,12 +33,28 @@ function ComboBox({
   const onChangeIteration = (newValue: any[]) => {
     setFormState({
       ...formState,
-      citiesData: [...formState.citiesData, newValue],
+      citiesData: {
+        ...formState.citiesData,
+          [inputName]: {
+            id: inputName,
+            name: newValue[0],
+            latitude: newValue[1],
+            longitude: newValue[2],
+          },
+			},
       intermediateCities: [
         ...formState.intermediateCities,
         { id: inputName, value: newValue[0] },
       ],
     });
+  };
+
+  const setOptionLabel = (option: any) => {
+    if (isIterationChild) {
+      return typeof option === "string" ? option : option[0];
+    } else {
+      return typeof option === "string" ? option : option[0];
+    }
   };
 
   const [loading, setIsloading] = useState(false);
@@ -55,9 +71,7 @@ function ComboBox({
           value={value}
           autoComplete
           noOptionsText="No Cities Found"
-          getOptionLabel={(option) =>
-            typeof option === "string" ? option : option.value
-          }
+          getOptionLabel={(option) => setOptionLabel(option)}
           includeInputInList
           isOptionEqualToValue={(option, value) => option[0] === value[0]}
           filterSelectedOptions
@@ -68,7 +82,15 @@ function ComboBox({
               setFormState({
                 ...formState,
                 [inputName]: newValue[0],
-                citiesData: [...formState.citiesData, newValue],
+                citiesData: {
+                  ...formState.citiesData,
+                  [inputName]: {
+                    id: inputName,
+                    name: newValue[0],
+                    latitude: newValue[1],
+                    longitude: newValue[2],
+                  },
+                },
               });
             }
           }}

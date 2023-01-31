@@ -33,19 +33,19 @@ export const calculateDistance = (cities: any[]) => {
     if (index === 0) return;
 
     const cityProp: Dictionary = {};
-    // if (city[0] === "Dijon") {
-    //   error = true;
-    //   return;
-    // }
+    if (city.name === "Dijon") {
+      error = true;
+      return;
+    }
     const cityA = cities[index - 1];
     const cityB = city;
 
-    const a = { latitude: cityA[1], longitude: cityA[2] };
-    const b = { latitude: cityB[1], longitude: cityB[2] };
+    const a = { latitude: cityA.latitude, longitude: cityA.longitude };
+    const b = { latitude: cityB.latitude, longitude: cityB.longitude };
 
     const distance = Math.trunc(haversineDistance(a, b) / 1000);
 
-    cityProp.route = `${cityA[0]}--${cityB[0]}`;
+    cityProp.route = `${cityA.name}--${cityB.name}`;
 
     cityProp.distance = `${distance} Km`;
 

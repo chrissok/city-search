@@ -30,15 +30,15 @@ function SearchResults() {
     ? JSON.parse(intermediateCities)
     : intermediateCities;
 
-  console.log(intermediateCitiesParsed);
-
   const [cityDistances, setCityDistances] = useState([]);
   const [totalDistance, setTotalDistance] = useState(0);
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
+    const cityDaTaToArray =  Object.values(citiesDataParsed)
+
     setLoading(true);
-    calculateDistance(citiesDataParsed)
+    calculateDistance(cityDaTaToArray)
       .then((data: any) => {
         setCityDistances(data);
         setTotalDistance(data[data.length - 1]);
@@ -109,7 +109,9 @@ function SearchResults() {
           {cityDistances.map(({ route, distance }) => (
             <>
               <Typography variant="h6">{route}</Typography>
-              <Typography variant="body1" mb={2}>{distance}</Typography>
+              <Typography variant="body1" mb={2}>
+                {distance}
+              </Typography>
             </>
           ))}
           {totalDistance !== 0 && (
