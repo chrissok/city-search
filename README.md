@@ -7,6 +7,8 @@
 
 > Refactor types :any and create missing interfaces.
 
+> Wrap logics in useMemo and functions in useCallback when needed
+
 ### How it works:
 > Complete the different inputs of the form and click submit to receive the trip distances.
 

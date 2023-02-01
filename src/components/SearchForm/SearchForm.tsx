@@ -177,8 +177,6 @@ export default function SearchForm() {
   };
 
   const isFormCompleted = () => {
-    // if (cityOriginParam && dateParam && cityDestinationParam && passengerParam)
-    //   return true;
     for (const property in formState) {
       if (property === "intermediateCities") {
         if (formState[property].length < intermediateCities.length)
@@ -188,8 +186,6 @@ export default function SearchForm() {
     }
     return true;
   };
-
-  console.log(formState);
 
   return (
     <Box sx={styles.form}>

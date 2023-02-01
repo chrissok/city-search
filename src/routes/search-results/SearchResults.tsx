@@ -8,16 +8,12 @@ import {
   Typography,
 } from "@mui/material";
 import { Box } from "@mui/system";
-import { useLocation, useParams, useSearchParams } from "react-router-dom";
+import {useSearchParams } from "react-router-dom";
 import { styles } from "./styles";
 import { useEffect, useState } from "react";
 import { calculateDistance } from "../../api/actions";
-import { sumArray } from "../../utils/utils";
 
 function SearchResults() {
-  // const { ...all } = useLocation();
-  // const { state } = useLocation();
-
   const [searchParams, setSearchParams] = useSearchParams();
 
   const cityOrigin = searchParams.get("cityOrigin");

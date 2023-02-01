@@ -4,7 +4,6 @@ import {
   CircularProgress,
   Fade,
   TextField,
-  Typography,
 } from "@mui/material";
 import React, { useCallback, useEffect, useState } from "react";
 import { Dictionary } from "../../types/types";
@@ -53,7 +52,6 @@ function ComboBox({
       const cities = await getCitiesByName(inputValue);
       setOptions(cities);
     } catch (error: any) {
-      console.error(error);
       setErrorText(error);
       setOptions([]);
       setOpen(false);
