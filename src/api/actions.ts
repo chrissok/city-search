@@ -3,7 +3,9 @@ import { Dictionary } from "../types/types";
 import { cities } from "./mock-cities";
 
 export const getCitiesByName = (keyword: string): Promise<any[]> => {
-  const filteredCities = cities.filter((city: any) => city[0] === keyword);
+  const filteredCities = cities.filter((city: any) =>
+    city[0].toLowerCase().includes(keyword.toLowerCase())
+  );
 
   return new Promise((resolve, reject) => {
     setTimeout(() => {
