@@ -1,4 +1,11 @@
-import { Autocomplete, CircularProgress, Fade, TextField } from "@mui/material";
+import {
+  Alert,
+  Autocomplete,
+  CircularProgress,
+  Fade,
+  TextField,
+  Typography,
+} from "@mui/material";
 import React, { useCallback, useEffect, useState } from "react";
 import { Dictionary } from "../../types/types";
 import _debounce from "lodash/debounce";
@@ -32,16 +39,25 @@ function ComboBox({
 
   const [loading, setIsloading] = useState(false);
 
+  const [errorText, setErrorText] = useState("");
+  const [error, setError] = useState(false);
+
   const handleDebounceFn = async (
     inputValue: string,
     setIsLoading: Function
   ) => {
     setIsLoading(true);
+    setError(false);
+    setOptions([]);
     try {
       const cities = await getCitiesByName(inputValue);
       setOptions(cities);
-    } catch (error) {
+    } catch (error: any) {
       console.error(error);
+      setErrorText(error);
+      setOptions([]);
+      setOpen(false);
+      setError(true);
     }
     setIsLoading(false);
   };
@@ -67,18 +83,33 @@ function ComboBox({
     });
   };
 
+  const [open, setOpen] = useState(false);
+
+  useEffect(() => {
+    if (!open) {
+      setOptions([]);
+    }
+  }, [open]);
+
   return (
     <>
       <Fade in={true} timeout={600}>
         <Autocomplete
           {...props}
           disablePortal
+          open={open}
+          onOpen={() => {
+            setOpen(true);
+          }}
+          onClose={() => {
+            setOpen(false);
+          }}
           onBlur={(event) => onBlurHandler(event, inputName)}
           options={options}
           filterOptions={(x) => x}
           value={value}
           autoComplete
-          noOptionsText="No Cities Found"
+          noOptionsText="Please enter a city"
           getOptionLabel={(option) =>
             typeof option === "string" ? option : option[0]
           }
@@ -104,16 +135,18 @@ function ComboBox({
               });
             }
           }}
-          onInputChange={(event, newInputValue) => {
-            updateTouchElement(inputName);
-            debounceFn(newInputValue, setIsloading);
+          onInputChange={(event: any, newInputValue: any, reason) => {
+            if (newInputValue.length > 0 && reason === "input") {
+              updateTouchElement(inputName);
+              debounceFn(newInputValue, setIsloading);
+            }
           }}
           sx={{ width: 300 }}
           renderInput={(params) => (
             <TextField
               {...params}
-              onBlur={(event) => onBlurHandler(event, inputName)}
               sx={sx}
+							required
               InputProps={{
                 ...params.InputProps,
                 endAdornment: (
@@ -126,12 +159,13 @@ function ComboBox({
                 ),
               }}
               name={inputName}
-              error={formInputValidation[inputName].error}
+              error={formInputValidation[inputName].error || error}
               label={inputLabel}
             />
           )}
         />
       </Fade>
+      {error && <Alert severity="error">{errorText}</Alert>}
     </>
   );
 }

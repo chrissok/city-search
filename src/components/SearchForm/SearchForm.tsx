@@ -2,16 +2,14 @@ import Box from "@mui/material/Box";
 import TextField from "@mui/material/TextField";
 import { styles } from "./styles";
 import AddRemoveButtons from "../AddRemoveButtons/AddRemoveButtons";
-import _debounce from "lodash/debounce";
 import { useState, MouseEventHandler } from "react";
 import { Button } from "@mui/material";
 import { DatePicker, LocalizationProvider } from "@mui/x-date-pickers";
 import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
 import dayjs, { Dayjs } from "dayjs";
-import { useLocation, useNavigate, useSearchParams } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import customParseFormat from "dayjs/plugin/customParseFormat";
 import { isEmpty, serialize } from "../../utils/utils";
-import { getCitiesByName } from "../../api/actions";
 import ComboBox from "../ComboBox/ComboBox";
 import { Dictionary } from "../../types/types";
 
@@ -42,7 +40,6 @@ export default function SearchForm() {
   const dateParam = dayjs(searchParams.get("date"), "L");
 
   const [dateValue, setDateValue] = useState<Dayjs | null>(dateParam || null);
-  const [originCityOptions, setOriginCityOptions] = useState<string[]>([]);
 
   const cityOriginParam = searchParams.get("cityOrigin");
   const cityDestinationParam = searchParams.get("cityDestination");
@@ -184,7 +181,8 @@ export default function SearchForm() {
     //   return true;
     for (const property in formState) {
       if (property === "intermediateCities") {
-        if (formState[property].length < intermediateCities.length) return false;
+        if (formState[property].length < intermediateCities.length)
+          return false;
       }
       if (formState[property] === "") return false;
     }
@@ -236,6 +234,7 @@ export default function SearchForm() {
         <DatePicker
           label="Pick a date"
           value={dateValue}
+					onClose={onBlurHandler}
           onChange={(newValue) => {
             setDateValue(newValue);
             setFormState({
@@ -250,6 +249,7 @@ export default function SearchForm() {
               onBlur={(event) => onBlurHandler(event, "date")}
               sx={styles.form__input}
               name={"date"}
+              required
               error={formInputValidationState["date"].error}
               value={dateValue}
             />
@@ -261,8 +261,15 @@ export default function SearchForm() {
         type={"number"}
         required
         value={formState.passenger}
+        InputProps={{
+          inputProps: { min: 0 },
+        }}
         onChange={(e) => {
-          setFormState({ ...formState, passenger: e.target.value });
+          setFormState({
+            ...formState,
+            passenger:
+              e.target.value < "0" ? (e.target.value = "0") : e.target.value,
+          });
           updateTouchElement("passenger");
         }}
         name={"passenger"}

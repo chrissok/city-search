@@ -7,7 +7,10 @@ export const getCitiesByName = (keyword: string): Promise<any[]> => {
 
   return new Promise((resolve, reject) => {
     setTimeout(() => {
-      if (keyword === "fail" || filteredCities.length === 0) {
+      if (
+        keyword.toLocaleLowerCase() === "fail" ||
+        filteredCities.length === 0
+      ) {
         reject("Please enter a valid city");
       } else {
         resolve(filteredCities);
@@ -25,7 +28,8 @@ export const calculateDistance = (cities: any[]) => {
     if (index === 0) return;
 
     const cityProp: Dictionary = {};
-    if (city.name === "Dijon") {
+
+    if (city.name === "Dijon" || cities[index - 1].name === "Dijon") {
       error = true;
       return;
     }
