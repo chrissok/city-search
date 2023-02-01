@@ -8,9 +8,13 @@
 
 ### How it works:
 > Complete the different inputs of the form and click submit to receive the trip distances.
+
 > The city inputs search the cities by complete match I.E `"Paris" === "Paris true . "Paris" === "Par" false` (thats what I understood in the task, to change the condition see `getCitiesByName` in src/api/action.ts).
+
 > The same inputs take 1 second to make the mocked petition by a debounce function and another one to load the cities.
+
 > If the keyword "fail" (case insensitive) is inputted on any city input, it will return an alert.
+
 > If the city "Dijon" is used, the calculation on /search-results will return an error too.
 
 > You can find the mock database in src/api/mock-cities.ts
