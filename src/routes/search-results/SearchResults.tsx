@@ -104,13 +104,6 @@ function SearchResults() {
           disabled
           label={"City of Origin"}
         />
-        <TextField
-          value={cityDestination}
-          size="small"
-          disabled
-          label={"City of Origin"}
-          sx={styles.container__input}
-        />
         {Object.values(intermediateCitiesParsed).map((city: any) => (
           <TextField
             value={city.value}
